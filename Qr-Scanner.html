@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory QR Scanner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            padding: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #video {
+            width: 100%;
+            display: block;
+        }
+        
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #007bff;
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #stopButton {
+            background-color: #dc3545;
+        }
+        
+        #stopButton:hover {
+            background-color: #c82333;
+        }
+        
+        #clearButton {
+            background-color: #6c757d;
+        }
+        
+        #clearButton:hover {
+            background-color: #545b62;
+        }
+        
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        #results h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            word-break: break-all;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .status.scanning {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status.ready {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏭 Factory QR Scanner</h1>
+        
+        <div class="instructions">
+            <h3>How to Use:</h3>
+            <ul>
+                <li>Click "Start Scanner" to begin</li>
+                <li>Point your camera at a QR code</li>
+                <li>Scan results will appear below</li>
+                <li>Click "Print Results" to create a paper log</li>
+                <li>Click "Clear Results" to start over</li>
+            </ul>
+        </div>
+        
+        <div class="status ready" id="status">Ready to scan</div>
+        
+        <div class="scanner-container">
+            <video id="video" autoplay playsinline></video>
+            <div class="scan-overlay">
+                <div class="scan-line"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startButton">▶ Start Scanner</button>
+            <button id="stopButton">⏹ Stop Scanner</button>
+            <button id="clearButton">🗑 Clear Results</button>
+            <button id="printButton">🖨 Print Results</button>
+        </div>
+        
+        <div id="results">
+            <h2>Scan Results</h2>
+            <div id="resultsList">No scans yet</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <script>
+        // DOM Elements
+        const video = document.getElementById('video');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const clearButton = document.getElementById('clearButton');
+        const printButton = document.getElementById('printButton');
+        const resultsList = document.getElementById('resultsList');
+        const status = document.getElementById('status');
+        
+        // Variables
+        let stream = null;
+        let scanning = false;
+        let scanResults = [];
+        
+        // Initialize
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = stream;
+                status.textContent = 'Camera ready - click Start Scanner';
+                status.className = 'status ready';
+                startButton.disabled = false;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                status.textContent = 'Error: Could not access camera. Please ensure you have a camera and allow camera access.';
+                status.className = 'status error';
+                startButton.disabled = true;
+            }
+        }
+        
+        // Start scanning
+        function startScanning() {
+            if (!stream) {
+                status.textContent = 'Camera not initialized. Please reload the page.';
+                status.className = 'status error';
+                return;
+            }
+            
+            scanning = true;
+            status.textContent = 'Scanning... Point camera at QR codes';
+            status.className = 'status scanning';
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            
+            scanFrame();
+        }
+        
+        // Stop scanning
+        function stopScanning() {
+            scanning = false;
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            status.textContent = 'Scanner stopped';
+            status.className = 'status ready';
+        }
+        
+        // Scan frame function
+        function scanFrame() {
+            if (!scanning) return;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+            
+            if (code) {
+                addResult(code.data);
+                // Add a small delay to avoid rapid scanning
+                setTimeout(() => {
+                    if (scanning) scanFrame();
+                }, 1000);
+            } else {
+                // Continue scanning
+                setTimeout(scanFrame, 100);
+            }
+        }
+        
+        // Add result to list
+        function addResult(data) {
+            const timestamp = new Date().toLocaleString();
+            const result = {
+                timestamp: timestamp,
+                data: data
+            };
+            
+            scanResults.push(result);
+            updateResultsList();
+            
+            // Auto-stop after first successful scan
+            if (scanning) {
+                stopScanning();
+            }
+        }
+        
+        // Update results display
+        function updateResultsList() {
+            if (scanResults.length === 0) {
+                resultsList.innerHTML = '<div class="result-item">No scans yet</div>';
+                return;
+            }
+            
+            let html = '';
+            scanResults.forEach(result => {
+                html += `
+                    <div class="result-item">
+                        <div class="timestamp">${result.timestamp}</div>
+                        <div><strong>${result.data}</strong></div>
+                    </div>
+                `;
+            });
+            
+            resultsList.innerHTML = html;
+        }
+        
+        // Clear results
+        function clearResults() {
+            scanResults = [];
+            updateResultsList();
+            status.textContent = 'Results cleared';
+            status.className = 'status ready';
+        }
+        
+        // Print results
+        function printResults() {
+            if (scanResults.length === 0) {
+                alert('No results to print');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Factory QR Scan Results</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .timestamp { font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Factory QR Scan Results</h1>
+                    <p>Date: ${new Date().toLocaleDateString()}</p>
+                    <table>
+                        <tr>
+                            <th>Time</th>
+                            <th>QR Code Data</th>
+                        </tr>
+            `);
+            
+            scanResults.forEach(result => {
+                printWindow.document.write(`
+                    <tr>
+                        <td class="timestamp">${result.timestamp}</td>
+                        <td>${result.data}</td>
+                    </tr>
+                `);
+            });
+            
+            printWindow.document.write(`
+                    </table>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Event Listeners
+        startButton.addEventListener('click', startScanning);
+        stopButton.addEventListener('click', stopScanning);
+        clearButton.addEventListener('click', clearResults);
+        printButton.addEventListener('click', printResults);
+        
+        // Initialize camera on load
+        window.addEventListener('load', initCamera);
+        
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && scanning) {
+                stopScanning();
+            }
+        });
+    </script>
+</body>
+</html>
