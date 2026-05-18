@@ -7,204 +7,474 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* ... existing CSS ... */
-        .excel-view {
-            display: none;
-            width: 100%;
-            max-width: 1200px;
-            margin: 20px auto;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            overflow: hidden;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .excel-header {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-bottom: 2px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .excel-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: Arial, sans-serif;
-        }
-        
-        .excel-table th {
-            background-color: #e9ecef;
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 2px solid #dee2e6;
-            font-weight: bold;
-        }
-        
-        .excel-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .excel-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .excel-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .excel-actions {
-            margin: 15px 0;
+        h1 {
             text-align: center;
+            color: #333;
+            margin-bottom: 30px;
         }
         
-        .excel-actions button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        #video {
+            width: 100%;
+            display: block;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 12px 20px;
+            margin: 5px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
         }
         
-        .excel-actions button:hover {
-            background-color: #0056b3;
-        }
-        
-        .excel-actions button#exportBtn {
+        #startBtn {
             background-color: #28a745;
+            color: white;
         }
         
-        .excel-actions button#exportBtn:hover {
-            background-color: #1e7e34;
+        #startBtn:hover {
+            background-color: #218838;
         }
         
-        .excel-actions button#closeExcelBtn {
+        #stopBtn {
             background-color: #dc3545;
+            color: white;
         }
         
-        .excel-actions button#closeExcelBtn:hover {
+        #stopBtn:hover {
             background-color: #c82333;
         }
         
-        .excel-stats {
-            background-color: #e9ecef;
-            padding: 10px;
+        #printBtn {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        #printBtn:hover {
+            background-color: #0056b3;
+        }
+        
+        #excelViewBtn {
+            background-color: #ffc107;
+            color: black;
+        }
+        
+        #excelViewBtn:hover {
+            background-color: #e0a800;
+        }
+        
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        
+        #results h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        #results ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        #results li {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 3px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .status {
             text-align: center;
-            font-size: 14px;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .excel-view {
+            background-color: #e9f7ef;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .excel-view h3 {
+            margin-top: 0;
+            color: #28a745;
+        }
+        
+        .excel-view table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .excel-view th, .excel-view td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .excel-view th {
+            background-color: #f2f2f2;
+        }
+        
+        .instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .scan-animation {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
     </style>
 </head>
 <body>
-    <!-- ... existing HTML ... -->
-    
-    <!-- Excel View Container -->
-    <div id="excelView" class="excel-view">
-        <div class="excel-header">
-            <h3>Scan Results - Excel View</h3>
-            <div>
-                <button id="exportBtn">Export to Excel File</button>
-                <button id="closeExcelBtn">Close Excel View</button>
-            </div>
+    <div class="container">
+        <h1>Factory QR Scanner</h1>
+        
+        <div id="videoContainer">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
         </div>
         
-        <div class="excel-stats">
-            <span id="excelStats">Total scans: 0</span>
+        <div class="controls">
+            <button id="startBtn">Start Camera</button>
+            <button id="stopBtn" class="hidden">Stop Camera</button>
+            <button id="printBtn" class="hidden">Export to Excel Online</button>
+            <button id="excelViewBtn" class="hidden">View in Excel Format</button>
         </div>
         
-        <table class="excel-table" id="excelTable">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>QR Code Data</th>
-                </tr>
-            </thead>
-            <tbody id="excelTableBody">
-                <!-- Results will be populated here -->
-            </tbody>
-        </table>
+        <div id="status" class="status info">
+            Ready to scan QR codes. Click "Start Camera" to begin.
+        </div>
+        
+        <div id="results" class="hidden">
+            <h3>Scan Results</h3>
+            <ul id="resultsList"></ul>
+        </div>
+        
+        <div id="excelView" class="excel-view hidden">
+            <h3>Excel View</h3>
+            <table id="excelTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>QR Code Data</th>
+                    </tr>
+                </thead>
+                <tbody id="excelTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to use Excel Online:</h3>
+            <ol>
+                <li>Click "Export to Excel Online" to download CSV file</li>
+                <li>Open Excel Online at <a href="https://office.com" target="_blank">office.com</a></li>
+                <li>Click "New" → "Excel Online"</li>
+                <li>Upload the downloaded CSV file</li>
+                <li>Excel Online will automatically format your data</li>
+            </ol>
+        </div>
     </div>
 
     <script>
-        // ... existing code ...
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const printBtn = document.getElementById('printBtn');
+        const excelViewBtn = document.getElementById('excelViewBtn');
+        const resultsDiv = document.getElementById('results');
+        const resultsList = document.getElementById('resultsList');
+        const statusDiv = document.getElementById('status');
+        const videoContainer = document.getElementById('videoContainer');
+        const excelView = document.getElementById('excelView');
+        const excelTableBody = document.getElementById('excelTableBody');
         
-        let scanResults = [];
-        let video = null;
+        let stream = null;
         let scanning = false;
-        let canvas = null;
-        let ctx = null;
+        let scanInterval = null;
+        let scanResults = [];
         
-        // ... existing functions ...
-        
-        // Function to show results in Excel-like view
-        function showExcelView() {
-            const excelView = document.getElementById('excelView');
-            const excelTableBody = document.getElementById('excelTableBody');
-            const excelStats = document.getElementById('excelStats');
-            
-            // Clear existing table
-            excelTableBody.innerHTML = '';
-            
-            // Populate table with results
-            scanResults.forEach(result => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${result.timestamp}</td>
-                    <td>${result.data}</td>
-                `;
-                excelTableBody.appendChild(row);
-            });
-            
-            // Update stats
-            excelStats.textContent = `Total scans: ${scanResults.length}`;
-            
-            // Show Excel view and hide regular results
-            excelView.style.display = 'block';
-            document.getElementById('results').style.display = 'none';
+        // Initialize video
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                video.srcObject = stream;
+                updateStatus('Camera initialized successfully. Click "Start Scanning" to begin.', 'success');
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                updateStatus('Error accessing camera: ' + error.message, 'error');
+            }
         }
         
-        // Function to close Excel view
-        function closeExcelView() {
-            const excelView = document.getElementById('excelView');
-            excelView.style.display = 'none';
-            document.getElementById('results').style.display = 'block';
+        // Update status message
+        function updateStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
         }
         
-        // Function to export to Excel file (if needed)
-        function exportToExcelFile() {
-            if (scanResults.length === 0) {
-                alert('No results to export');
+        // Start scanning
+        function startScanning() {
+            if (!stream) {
+                updateStatus('Please start the camera first.', 'error');
                 return;
             }
             
-            // Create worksheet data
-            const data = scanResults.map(result => ({
-                Timestamp: result.timestamp,
-                "QR Code Data": result.data
-            }));
+            scanning = true;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            printBtn.classList.remove('hidden');
+            excelViewBtn.classList.remove('hidden');
             
-            // Create workbook and worksheet
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "QR Scans");
-            
-            // Export to file
-            XLSX.writeFile(wb, "factory_qr_scans.xlsx");
+            // Start scanning interval
+            scanInterval = setInterval(scanFrame, 100);
+            updateStatus('Scanning for QR codes...', 'success');
         }
         
-        // Add event listeners for Excel view buttons
-        document.getElementById('exportBtn').addEventListener('click', exportToExcelFile);
-        document.getElementById('closeExcelBtn').addEventListener('click', closeExcelView);
+        // Stop scanning
+        function stopScanning() {
+            scanning = false;
+            clearInterval(scanInterval);
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            printBtn.classList.add('hidden');
+            excelViewBtn.classList.add('hidden');
+            updateStatus('Scanning stopped. Click "Start Camera" to begin again.', 'info');
+        }
         
-        // Add a button to switch to Excel view in your existing UI
-        // You can add this to your existing buttons:
-        // <button id="excelViewBtn">Show Excel View</button>
-        document.getElementById('excelViewBtn').addEventListener('click', showExcelView);
+        // Scan a single frame
+        function scanFrame() {
+            if (!scanning) return;
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                // Add to results if not already present
+                const existingResult = scanResults.find(result => result.data === code.data);
+                if (!existingResult) {
+                    const result = {
+                        timestamp: new Date().toLocaleString(),
+                        data: code.data
+                    };
+                    scanResults.push(result);
+                    updateResults();
+                    updateStatus('QR Code detected: ' + code.data, 'success');
+                }
+                
+                // Draw a rectangle around the QR code
+                drawQRCode(code);
+            }
+        }
         
-        // ... existing code ...
+        // Draw QR code rectangle
+        function drawQRCode(code) {
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                code.location.topLeftCorner.x,
+                code.location.topLeftCorner.y,
+                code.location.bottomRightCorner.x - code.location.topLeftCorner.x,
+                code.location.bottomRightCorner.y - code.location.topLeftCorner.y
+            );
+        }
+        
+        // Update results display
+        function updateResults() {
+            resultsList.innerHTML = '';
+            
+            scanResults.forEach((result, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. [${result.timestamp}] ${result.data}`;
+                resultsList.appendChild(li);
+            });
+            
+            resultsDiv.classList.remove('hidden');
+            
+            // Update Excel view
+            updateExcelView();
+        }
+        
+        // Update Excel view table
+        function updateExcelView() {
+            excelTableBody.innerHTML = '';
+            
+            scanResults.forEach((result, index) => {
+                const row = document.createElement('tr');
+                const timestampCell = document.createElement('td');
+                const dataCell = document.createElement('td');
+                
+                timestampCell.textContent = result.timestamp;
+                dataCell.textContent = result.data;
+                
+                row.appendChild(timestampCell);
+                row.appendChild(dataCell);
+                excelTableBody.appendChild(row);
+            });
+            
+            excelView.classList.remove('hidden');
+        }
+        
+        // Export to CSV for Excel Online
+        function exportToCSV() {
+            if (scanResults.length === 0) {
+                updateStatus('No scan results to export.', 'error');
+                return;
+            }
+            
+            let csvContent = "Timestamp,QR Code Data\n";
+            
+            scanResults.forEach(result => {
+                // Escape commas and quotes in the data
+                const timestamp = result.timestamp.replace(/,/g, ' ');
+                const data = result.data.replace(/,/g, ' ').replace(/"/g, '""');
+                csvContent += `"${timestamp}","${data}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'qr_scan_results.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            updateStatus('CSV file exported successfully. Open it in Excel Online to view.', 'success');
+        }
+        
+        // Show Excel view
+        function showExcelView() {
+            excelView.classList.remove('hidden');
+            updateStatus('Excel view updated.', 'success');
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', () => {
+            initCamera();
+            setTimeout(startScanning, 1000); // Wait a bit for camera to initialize
+        });
+        
+        stopBtn.addEventListener('click', stopScanning);
+        printBtn.addEventListener('click', exportToCSV);
+        excelViewBtn.addEventListener('click', showExcelView);
+        
+        // Initialize
+        updateStatus('Ready to scan QR codes. Click "Start Camera" to begin.', 'info');
+        
+        // Add some sample data for demonstration
+        setTimeout(() => {
+            if (scanResults.length === 0) {
+                scanResults = [
+                    { timestamp: new Date().toLocaleString(), data: 'Sample QR Code 1' },
+                    { timestamp: new Date().toLocaleString(), data: 'Sample QR Code 2' },
+                    { timestamp: new Date().toLocaleString(), data: 'Sample QR Code 3' }
+                ];
+                updateResults();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
